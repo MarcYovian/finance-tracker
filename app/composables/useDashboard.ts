@@ -1,25 +1,33 @@
-import { createSharedComposable } from '@vueuse/core'
+import { createSharedComposable } from "@vueuse/core";
 
 const _useDashboard = () => {
-  const route = useRoute()
-  const router = useRouter()
-  const isNotificationsSlideoverOpen = ref(false)
+  const route = useRoute();
+  const router = useRouter();
+  const isNotificationsSlideoverOpen = ref(false);
 
   defineShortcuts({
-    'g-h': () => router.push('/'),
-    'g-i': () => router.push('/inbox'),
-    'g-c': () => router.push('/customers'),
-    'g-s': () => router.push('/settings'),
-    'n': () => isNotificationsSlideoverOpen.value = !isNotificationsSlideoverOpen.value
-  })
+    "g-h": () => router.push("/"),
+    "g-t": () => router.push("/transactions"),
+    "g-f": () => router.push("/fund-sources"),
+    "g-b": () => router.push("/budgets"),
+    "g-g": () => router.push("/goals"),
+    "g-c": () => router.push("/categories"),
+    "g-r": () => router.push("/recurring"),
+    n: () =>
+      (isNotificationsSlideoverOpen.value =
+        !isNotificationsSlideoverOpen.value),
+  });
 
-  watch(() => route.fullPath, () => {
-    isNotificationsSlideoverOpen.value = false
-  })
+  watch(
+    () => route.fullPath,
+    () => {
+      isNotificationsSlideoverOpen.value = false;
+    }
+  );
 
   return {
-    isNotificationsSlideoverOpen
-  }
-}
+    isNotificationsSlideoverOpen,
+  };
+};
 
-export const useDashboard = createSharedComposable(_useDashboard)
+export const useDashboard = createSharedComposable(_useDashboard);
