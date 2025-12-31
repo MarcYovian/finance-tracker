@@ -33,41 +33,24 @@ const handleSubmit = async () => {
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <UFormField label="Email" name="email" required>
-          <UInput
-            v-model="email"
-            type="email"
-            placeholder="you@example.com"
-            icon="i-lucide-mail"
-            size="lg"
-            class="w-full"
-          />
+          <UInput v-model="email" type="email" placeholder="you@example.com" icon="i-lucide-mail" size="lg"
+            class="w-full" />
         </UFormField>
 
         <UFormField label="Password" name="password" required>
-          <UInput
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            icon="i-lucide-lock"
-            size="lg"
-            class="w-full"
-          />
+          <UInput v-model="password" type="password" placeholder="••••••••" icon="i-lucide-lock" size="lg"
+            class="w-full" />
         </UFormField>
 
-        <UAlert
-          v-if="error"
-          color="error"
-          variant="subtle"
-          :title="error"
-          icon="i-lucide-alert-circle"
-        />
+        <div class="flex justify-end">
+          <NuxtLink to="/auth/forgot-password" class="text-sm text-primary hover:underline">
+            Lupa password?
+          </NuxtLink>
+        </div>
 
-        <UButton
-          type="submit"
-          block
-          size="lg"
-          :loading="loading"
-        >
+        <UAlert v-if="error" color="error" variant="subtle" :title="error" icon="i-lucide-alert-circle" />
+
+        <UButton type="submit" block size="lg" :loading="loading">
           Masuk
         </UButton>
       </form>

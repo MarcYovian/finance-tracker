@@ -17,8 +17,20 @@ export const useBudgets = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id from session
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) {
+      return user.value.id;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchBudgets = async (forceRefresh = false) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Check cache first
     if (!forceRefresh) {
@@ -44,7 +56,7 @@ export const useBudgets = () => {
           )
         `
         )
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .eq("is_active", true)
         .order("start_date", { ascending: false });
 
@@ -63,7 +75,8 @@ export const useBudgets = () => {
     budget: BudgetCreate,
     items: BudgetItemCreate[]
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -74,7 +87,7 @@ export const useBudgets = () => {
         .from("budgets")
         .insert({
           ...budget,
-          user_id: user.value.id,
+          user_id: userId,
         })
         .select()
         .single();
@@ -109,7 +122,8 @@ export const useBudgets = () => {
   };
 
   const updateBudget = async (id: string, updates: Partial<BudgetCreate>) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -119,7 +133,7 @@ export const useBudgets = () => {
         .from("budgets")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -137,7 +151,8 @@ export const useBudgets = () => {
   };
 
   const deleteBudget = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -147,7 +162,7 @@ export const useBudgets = () => {
         .from("budgets")
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (deleteError) throw deleteError;
 

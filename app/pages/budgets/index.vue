@@ -182,7 +182,7 @@ const activeBudgets = computed(() => budgets.value.filter(b => b.is_active))
                             <h3 class="text-lg font-semibold text-highlighted">{{ budget.name }}</h3>
                             <p class="text-sm text-muted">
                                 {{ getPeriodLabel(budget.period) }} • {{ formatDate(budget.start_date) }} - {{
-                                formatDate(budget.end_date) }}
+                                    formatDate(budget.end_date) }}
                             </p>
                         </div>
 
@@ -253,7 +253,7 @@ const activeBudgets = computed(() => budgets.value.filter(b => b.is_active))
                     </div>
 
                     <UFormField label="Total Limit" required>
-                        <UInput v-model.number="formData.total_limit" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.total_limit" placeholder="0" />
                     </UFormField>
 
                     <UFormField label="Alert Threshold (%)">
@@ -279,8 +279,7 @@ const activeBudgets = computed(() => budgets.value.filter(b => b.is_active))
                                 <USelectMenu v-model="item.category_id"
                                     :items="expenseCategories.map(c => ({ label: c.name, value: c.id }))"
                                     value-key="value" placeholder="Pilih kategori" class="flex-1" />
-                                <UInput v-model.number="item.planned_amount" type="number" placeholder="Jumlah"
-                                    class="w-32" />
+                                <CurrencyInput v-model="item.planned_amount" placeholder="Jumlah" />
                                 <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
                                     @click="removeBudgetItem(index)" />
                             </div>

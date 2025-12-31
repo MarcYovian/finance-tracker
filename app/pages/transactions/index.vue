@@ -296,7 +296,7 @@ const columns: TableColumn<Transaction>[] = [
     <!-- Add Transaction Modal -->
     <UModal v-model:open="isModalOpen">
         <template #content>
-            <UCard>
+            <UCard class="max-h-[90vh] overflow-y-auto">
                 <template #header>
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold">Tambah Transaksi</h3>
@@ -314,7 +314,7 @@ const columns: TableColumn<Transaction>[] = [
                     </UFormField>
 
                     <UFormField label="Jumlah" required>
-                        <UInput v-model.number="formData.amount" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.amount" placeholder="0" />
                     </UFormField>
 
                     <UFormField label="Deskripsi">

@@ -11,8 +11,23 @@ export const useFundSources = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id
+  const getUserId = async (): Promise<string | null> => {
+    // If user is already available, return id
+    if (user.value?.id) {
+      return user.value.id;
+    }
+
+    // Otherwise, try to get from session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchFundSources = async (forceRefresh = false) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Check cache first
     if (!forceRefresh) {
@@ -30,7 +45,7 @@ export const useFundSources = () => {
       const { data, error: fetchError } = await supabase
         .from("fund_sources")
         .select("*")
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -47,7 +62,8 @@ export const useFundSources = () => {
   };
 
   const createFundSource = async (fundSource: FundSourceCreate) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -57,12 +73,15 @@ export const useFundSources = () => {
         .from("fund_sources")
         .insert({
           ...fundSource,
-          user_id: user.value.id,
+          user_id: userId,
         })
         .select()
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        console.error("Create error:", createError);
+        throw createError;
+      }
 
       fundSources.value.unshift(data as FundSource);
       cache.invalidateRelated("fund-sources");
@@ -80,7 +99,8 @@ export const useFundSources = () => {
     id: string,
     updates: Partial<FundSourceCreate>
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -90,7 +110,7 @@ export const useFundSources = () => {
         .from("fund_sources")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -113,7 +133,8 @@ export const useFundSources = () => {
   };
 
   const deleteFundSource = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -124,7 +145,7 @@ export const useFundSources = () => {
         .from("fund_sources")
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (deleteError) throw deleteError;
 

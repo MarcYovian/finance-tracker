@@ -298,7 +298,7 @@ const handleDelete = async (id: string) => {
                     </UFormField>
 
                     <UFormField label="Jumlah" required>
-                        <UInput v-model.number="formData.amount" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.amount" placeholder="0" />
                     </UFormField>
 
                     <div class="grid grid-cols-2 gap-4">

@@ -11,6 +11,17 @@ export const useTransactions = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id from session
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) {
+      return user.value.id;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchTransactions = async (options?: {
     startDate?: string;
     endDate?: string;
@@ -21,7 +32,8 @@ export const useTransactions = () => {
     offset?: number;
     forceRefresh?: boolean;
   }) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Build cache key based on options
     const cacheKey = `${CACHE_KEY}-${JSON.stringify(options || {})}`;
@@ -49,7 +61,7 @@ export const useTransactions = () => {
           destination_fund:fund_sources!transactions_destination_fund_fkey(*)
         `
         )
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .order("transaction_date", { ascending: false });
 
       if (options?.startDate) {
@@ -94,7 +106,8 @@ export const useTransactions = () => {
   };
 
   const createTransaction = async (transaction: TransactionCreate) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -138,7 +151,8 @@ export const useTransactions = () => {
     id: string,
     updates: Partial<TransactionCreate> & { amount: number }
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -181,7 +195,8 @@ export const useTransactions = () => {
   };
 
   const deleteTransaction = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;

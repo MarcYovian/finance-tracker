@@ -232,7 +232,7 @@ const columns = [
                     </UFormField>
 
                     <UFormField label="Saldo Awal" required>
-                        <UInput v-model.number="formData.balance" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.balance" placeholder="0" />
                     </UFormField>
 
                     <UFormField label="Deskripsi">

@@ -18,8 +18,20 @@ export const useCategories = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id from session
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) {
+      return user.value.id;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchCategories = async (forceRefresh = false) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Check cache first
     if (!forceRefresh) {
@@ -37,7 +49,7 @@ export const useCategories = () => {
       const { data, error: fetchError } = await supabase
         .from("categories")
         .select("*")
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .eq("is_active", true)
         .order("sort_order", { ascending: true, nullsFirst: false })
         .order("name", { ascending: true });
@@ -55,7 +67,8 @@ export const useCategories = () => {
   };
 
   const createCategory = async (category: CategoryCreate) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -65,7 +78,7 @@ export const useCategories = () => {
         .from("categories")
         .insert({
           ...category,
-          user_id: user.value.id,
+          user_id: userId,
         })
         .select()
         .single();
@@ -88,7 +101,8 @@ export const useCategories = () => {
     id: string,
     updates: Partial<CategoryCreate>
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -98,7 +112,7 @@ export const useCategories = () => {
         .from("categories")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -121,7 +135,8 @@ export const useCategories = () => {
   };
 
   const deleteCategory = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -132,7 +147,7 @@ export const useCategories = () => {
         .from("categories")
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (deleteError) throw deleteError;
 

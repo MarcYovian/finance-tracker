@@ -11,8 +11,20 @@ export const useRecurring = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id from session
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) {
+      return user.value.id;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchPatterns = async (forceRefresh = false) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Check cache first
     if (!forceRefresh) {
@@ -37,7 +49,7 @@ export const useRecurring = () => {
           destination_fund:fund_sources!recurring_patterns_destination_fund_fkey(*)
         `
         )
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .order("next_execution_date", { ascending: true });
 
       if (fetchError) throw fetchError;
@@ -53,7 +65,8 @@ export const useRecurring = () => {
   };
 
   const createPattern = async (pattern: RecurringPatternCreate) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -64,7 +77,7 @@ export const useRecurring = () => {
         .from("recurring_patterns")
         .insert({
           ...pattern,
-          user_id: user.value.id,
+          user_id: userId,
           next_execution_date: pattern.start_date,
           interval: pattern.interval || 1,
         })
@@ -89,7 +102,8 @@ export const useRecurring = () => {
     id: string,
     updates: Partial<RecurringPatternCreate>
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -99,7 +113,7 @@ export const useRecurring = () => {
         .from("recurring_patterns")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -118,7 +132,8 @@ export const useRecurring = () => {
   };
 
   const deletePattern = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -128,7 +143,7 @@ export const useRecurring = () => {
         .from("recurring_patterns")
         .delete()
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (deleteError) throw deleteError;
 
@@ -145,7 +160,8 @@ export const useRecurring = () => {
   };
 
   const togglePattern = async (id: string, isActive: boolean) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -155,7 +171,7 @@ export const useRecurring = () => {
         .from("recurring_patterns")
         .update({ is_active: isActive, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (updateError) throw updateError;
 

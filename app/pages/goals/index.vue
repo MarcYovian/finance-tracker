@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { format, differenceInDays } from 'date-fns'
+import { format, differenceInDays, differenceInMonths } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import type { FinancialGoal, FinancialGoalCreate, GoalCategory } from '~/types'
 
@@ -79,6 +79,20 @@ const getProgress = (goal: FinancialGoal) => {
 
 const getDaysRemaining = (targetDate: string) => {
     return differenceInDays(new Date(targetDate), new Date())
+}
+
+const getMonthsRemaining = (targetDate: string) => {
+    const months = differenceInMonths(new Date(targetDate), new Date())
+    return Math.max(months, 1) // Minimal 1 bulan
+}
+
+// Calculate how much to save per month to reach the goal
+const getMonthlySavingsNeeded = (goal: FinancialGoal) => {
+    const remaining = goal.target_amount - goal.current_amount
+    if (remaining <= 0) return 0 // Goal already reached
+
+    const monthsRemaining = getMonthsRemaining(goal.target_date)
+    return Math.ceil(remaining / monthsRemaining)
 }
 
 const getProgressColor = (goal: FinancialGoal) => {
@@ -275,9 +289,18 @@ const completedGoals = computed(() => goals.value.filter(g => g.status === 'comp
                                 </span>
                             </div>
 
-                            <p class="text-xs text-muted mt-2">
-                                Target: {{ formatDate(goal.target_date) }}
-                            </p>
+                            <div class="mt-3 pt-3 border-t border-default">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-muted">Target: {{ formatDate(goal.target_date) }}</span>
+                                    <div v-if="getMonthlySavingsNeeded(goal) > 0" class="text-right">
+                                        <p class="text-xs text-muted">Tabung per bulan:</p>
+                                        <p class="text-sm font-semibold text-primary">
+                                            {{ formatCurrency(getMonthlySavingsNeeded(goal)) }}
+                                        </p>
+                                    </div>
+                                    <span v-else class="text-xs text-success font-medium">🎉 Tercapai!</span>
+                                </div>
+                            </div>
                         </UCard>
                     </div>
                 </div>
@@ -325,11 +348,11 @@ const completedGoals = computed(() => goals.value.filter(g => g.status === 'comp
                     </UFormField>
 
                     <UFormField label="Target Amount" required>
-                        <UInput v-model.number="formData.target_amount" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.target_amount" placeholder="0" />
                     </UFormField>
 
                     <UFormField label="Current Amount">
-                        <UInput v-model.number="formData.current_amount" type="number" placeholder="0" class="w-full" />
+                        <CurrencyInput v-model="formData.current_amount" placeholder="0" />
                     </UFormField>
 
                     <UFormField label="Target Date" required>
@@ -372,7 +395,7 @@ const completedGoals = computed(() => goals.value.filter(g => g.status === 'comp
                     </p>
 
                     <UFormField label="Current Amount" required>
-                        <UInput v-model.number="progressAmount" type="number" class="w-full" />
+                        <CurrencyInput v-model="progressAmount" placeholder="0" />
                     </UFormField>
 
                     <div class="flex justify-end gap-2 pt-4">

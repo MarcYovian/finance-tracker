@@ -11,8 +11,20 @@ export const useGoals = () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Helper to get current user id from session
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) {
+      return user.value.id;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  };
+
   const fetchGoals = async (forceRefresh = false) => {
-    if (!user.value) return;
+    const userId = await getUserId();
+    if (!userId) return;
 
     // Check cache first
     if (!forceRefresh) {
@@ -30,7 +42,7 @@ export const useGoals = () => {
       const { data, error: fetchError } = await supabase
         .from("financial_goals")
         .select("*")
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .order("priority", { ascending: true })
         .order("target_date", { ascending: true });
 
@@ -46,7 +58,8 @@ export const useGoals = () => {
   };
 
   const createGoal = async (goal: FinancialGoalCreate) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -56,7 +69,7 @@ export const useGoals = () => {
         .from("financial_goals")
         .insert({
           ...goal,
-          user_id: user.value.id,
+          user_id: userId,
         })
         .select()
         .single();
@@ -78,7 +91,8 @@ export const useGoals = () => {
     id: string,
     updates: Partial<FinancialGoalCreate>
   ) => {
-    if (!user.value) return null;
+    const userId = await getUserId();
+    if (!userId) return null;
 
     loading.value = true;
     error.value = null;
@@ -88,7 +102,7 @@ export const useGoals = () => {
         .from("financial_goals")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -110,7 +124,8 @@ export const useGoals = () => {
   };
 
   const deleteGoal = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -120,7 +135,7 @@ export const useGoals = () => {
         .from("financial_goals")
         .delete()
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (deleteError) throw deleteError;
 
@@ -140,7 +155,8 @@ export const useGoals = () => {
   };
 
   const completeGoal = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -150,7 +166,7 @@ export const useGoals = () => {
         .from("financial_goals")
         .update({ status: "completed", updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (updateError) throw updateError;
 
@@ -170,7 +186,8 @@ export const useGoals = () => {
   };
 
   const cancelGoal = async (id: string) => {
-    if (!user.value) return false;
+    const userId = await getUserId();
+    if (!userId) return false;
 
     loading.value = true;
     error.value = null;
@@ -180,7 +197,7 @@ export const useGoals = () => {
         .from("financial_goals")
         .update({ status: "cancelled", updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user.value.id);
+        .eq("user_id", userId);
 
       if (updateError) throw updateError;
 

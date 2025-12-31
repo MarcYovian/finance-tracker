@@ -86,6 +86,55 @@ const _useAuth = () => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        }
+      );
+
+      if (resetError) {
+        error.value = resetError.message;
+        return false;
+      }
+
+      return true;
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : "An error occurred";
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        error.value = updateError.message;
+        return false;
+      }
+
+      return true;
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : "An error occurred";
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const isAuthenticated = computed(() => !!user.value);
 
   return {
@@ -96,6 +145,8 @@ const _useAuth = () => {
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
   };
 };
 
