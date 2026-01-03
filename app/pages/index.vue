@@ -4,13 +4,18 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Period, Range } from '~/types'
 
 const { isNotificationsSlideoverOpen } = useDashboard()
+const { unreadCount, fetchUnreadCount, subscribeToNotifications } = useNotifications()
 const user = useSupabaseUser()
 const router = useRouter()
 
 // Redirect to login if not authenticated
-watch(user, (newUser) => {
+watch(user, async (newUser) => {
   if (!newUser) {
     router.push('/auth/login')
+  } else {
+    // Fetch unread count and subscribe to real-time when user is logged in
+    await fetchUnreadCount()
+    subscribeToNotifications()
   }
 }, { immediate: true })
 
@@ -48,10 +53,10 @@ const displayName = computed(() => {
         <template #title>
           <div class="flex flex-col">
             <h1 class="text-xl font-bold text-highlighted">
-              Dashboard
+              Halo, {{ displayName }}! 👋
             </h1>
-            <p class="text-xs text-muted hidden sm:block">
-              Selamat datang kembali, {{ displayName }}!
+            <p class="text-sm text-muted">
+              Kelola keuanganmu dengan bijak hari ini
             </p>
           </div>
         </template>
@@ -66,7 +71,7 @@ const displayName = computed(() => {
               square
               @click="isNotificationsSlideoverOpen = true"
             >
-              <UChip color="error" inset>
+              <UChip :color="unreadCount > 0 ? 'error' : 'neutral'" :show="unreadCount > 0" inset>
                 <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
               </UChip>
             </UButton>
