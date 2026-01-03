@@ -29,19 +29,43 @@ const range = shallowRef<Range>({
   end: new Date()
 })
 const period = ref<Period>('daily')
+
+// Get user display name
+const displayName = computed(() => {
+  if (!user.value) return 'User'
+  return user.value.user_metadata?.full_name || user.value.email?.split('@')[0] || 'User'
+})
 </script>
 
 <template>
   <UDashboardPanel id="home">
     <template #header>
-      <UDashboardNavbar title="Dashboard" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar :ui="{ right: 'gap-3' }">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
+        <template #title>
+          <div class="flex flex-col">
+            <h1 class="text-xl font-bold text-highlighted">
+              Dashboard
+            </h1>
+            <p class="text-xs text-muted hidden sm:block">
+              Selamat datang kembali, {{ displayName }}!
+            </p>
+          </div>
+        </template>
+
         <template #right>
+          <HomeDateRangePicker v-model="range" class="hidden md:flex" />
+
           <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton color="neutral" variant="ghost" square @click="isNotificationsSlideoverOpen = true">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              square
+              @click="isNotificationsSlideoverOpen = true"
+            >
               <UChip color="error" inset>
                 <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
               </UChip>
@@ -49,25 +73,39 @@ const period = ref<Period>('daily')
           </UTooltip>
 
           <UDropdownMenu :items="items">
-            <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
+            <UButton icon="i-lucide-plus" size="md" class="rounded-full shadow-lg shadow-primary/20">
+              <span class="hidden sm:inline">Tambah</span>
+            </UButton>
           </UDropdownMenu>
         </template>
       </UDashboardNavbar>
-
-      <UDashboardToolbar>
-        <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-          <HomeDateRangePicker v-model="range" class="-ms-1" />
-
-          <HomePeriodSelect v-model="period" :range="range" />
-        </template>
-      </UDashboardToolbar>
     </template>
 
     <template #body>
-      <DashboardStats :range="range" />
-      <DashboardChart :period="period" :range="range" />
-      <DashboardRecentTransactions :range="range" />
+      <div class="space-y-6">
+        <!-- Stats Cards -->
+        <DashboardStats :range="range" />
+
+        <!-- Charts Row: Cash Flow (2/3) + Spending Chart (1/3) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div class="lg:col-span-2">
+            <DashboardChart :period="period" :range="range" />
+          </div>
+          <div class="lg:col-span-1">
+            <DashboardSpendingChart :range="range" />
+          </div>
+        </div>
+
+        <!-- Transactions + Budgets Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div class="lg:col-span-2">
+            <DashboardRecentTransactions :range="range" />
+          </div>
+          <div class="lg:col-span-1">
+            <DashboardBudgets />
+          </div>
+        </div>
+      </div>
     </template>
   </UDashboardPanel>
 </template>

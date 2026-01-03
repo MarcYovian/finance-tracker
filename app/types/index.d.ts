@@ -299,6 +299,8 @@ export interface DashboardSummary {
   active_budgets_count: number;
   active_goals_count: number;
   fund_sources_count: number;
+  income_change?: number;
+  expense_change?: number;
 }
 
 // Budget Spending Detail (from RPC)
